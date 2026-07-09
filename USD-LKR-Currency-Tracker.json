@@ -1,0 +1,374 @@
+{
+  "name": "USD-LKR Currency Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        -288
+      ],
+      "id": "390314ef-7fb1-4c99-8881-df7b067ff558",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://open.er-api.com/v6/latest/USD",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -16,
+        -288
+      ],
+      "id": "9a9c3b08-8c7a-4b61-9bc1-c703422b259b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3e5f0c3d-7569-4085-acc4-49003b5582a5",
+              "name": "usd_lkr",
+              "value": "={{$json.rates.LKR}}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        -288
+      ],
+      "id": "6bdd1500-4cd0-4172-b9c8-57083352c905",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ultramsg.com/********/messages/chat",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "********"
+            },
+            {
+              "name": "to",
+              "value": "947XXXXXXXX"
+            },
+            {
+              "name": "body",
+              "value": "={{$json.color}} *USD/LKR Exchange Alert*\n\n{{$json.status}}\n\n\ud83d\udcb5 Previous Rate : {{$json.previous}} LKR\n\n\ud83d\udcb0 Current Rate : {{$json.current.toFixed(2)}} LKR\n\n\ud83d\udcc8 Difference : {{$json.difference}} LKR\n\n\ud83d\udcca Percentage : {{$json.percentage}}%\n\n\ud83d\udd52 {{$now.format(\"dd MMM yyyy, hh:mm a\")}}\n\n\ud83e\udd16 Sent automatically by n8n\n\n\u23f0 Updated automatically by n8n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1104,
+        -288
+      ],
+      "id": "f8afcd9c-34f3-40f0-b34e-1359337b290a",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "********",
+          "mode": "list",
+          "cachedResultName": "USD-LKR values",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/********/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=********",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/********/edit#gid=********"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Currency",
+              "lookupValue": "USD_LKR"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        -288
+      ],
+      "id": "189ed779-be20-4035-b740-b09e3cfc6b8e",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "********",
+          "name": "Google Sheets OAuth2 API (configured locally)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const current = Number($('Edit Fields').first().json.usd_lkr);\n\nconst previous = Number($input.first().json.PreviousRate);\n\nconst difference = current - previous;\n\nconst percentage = previous === 0\n? 0\n: (difference / previous) * 100;\n\nlet color = \"\u26aa\";\nlet status = \"No Change\";\n\nif (difference > 0) {\n    color = \"\ud83d\udd34\";\n    status = \"USD Increased\";\n}\nelse if (difference < 0) {\n    color = \"\ud83d\udfe2\";\n    status = \"USD Decreased\";\n}\n\nreturn [{\n    json: {\n        current,\n        previous,\n        difference: difference.toFixed(2),\n        percentage: percentage.toFixed(2),\n        color,\n        status,\n        row: $input.first().json.row_number\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        -288
+      ],
+      "id": "5dbdfc7c-3b21-4c72-a0f0-677b0e5d7624",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a770c785-a571-40fa-9468-152b603b7e6e",
+              "leftValue": "={{ $json.difference }}",
+              "rightValue": "=0",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        -288
+      ],
+      "id": "92af4ea5-11bf-48ee-b601-0ad2019e7405",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "********",
+          "mode": "list",
+          "cachedResultName": "USD-LKR values",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/********/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=********",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/********/edit#gid=********"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PreviousRate": "={{ $('Edit Fields').item.json.usd_lkr }}"
+          },
+          "matchingColumns": [
+            "PreviousRate"
+          ],
+          "schema": [
+            {
+              "id": "Currency",
+              "displayName": "Currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PreviousRate",
+              "displayName": "PreviousRate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1328,
+        -288
+      ],
+      "id": "8a1a2d34-68f8-4d09-9901-a316e51c3da0",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "********",
+          "name": "Google Sheets OAuth2 API (configured locally)"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-07-08T10:57:51.771+05:30",
+          "Readable date": "July 8th 2026, 10:57:51 am",
+          "Readable time": "10:57:51 am",
+          "Day of week": "Wednesday",
+          "Year": "2026",
+          "Month": "July",
+          "Day of month": "08",
+          "Hour": "10",
+          "Minute": "57",
+          "Second": "51",
+          "Timezone": "Asia/Colombo (UTC+05:30)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "********",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "********"
+  },
+  "nodeGroups": [],
+  "id": "********",
+  "tags": []
+}
