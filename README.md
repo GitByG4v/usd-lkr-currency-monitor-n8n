@@ -18,7 +18,7 @@ An automation workflow built using **n8n** that monitors the USD to LKR exchange
 
 ## Workflow
 
-![Workflow](screenshot.jpeg)
+![Workflow](secreenshot.jpeg)
 
 ---
 
@@ -66,14 +66,7 @@ Google Sheets
 
 ## WhatsApp Notification
 
-![WhatsApp](screenshots/whatsapp-alert.png)
-
----
-
-## Google Sheet
-
-![Google Sheet](screenshots/google-sheet.png)
-
+![WhatsApp](whatsapp-alert.png)
 ---
 
 ## Import Workflow
