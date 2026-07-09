@@ -18,7 +18,7 @@ An automation workflow built using **n8n** that monitors the USD to LKR exchange
 
 ## Workflow
 
-![Workflow](screenshot.png)
+![Workflow](screenshot.jpeg)
 
 ---
 
